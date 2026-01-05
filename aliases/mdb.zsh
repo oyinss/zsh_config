@@ -1,7 +1,7 @@
 #!/bin/zsh
 
 mdb() {
-  local UPDATE_SCRIPT="~/Apex/pisol/cba/scripts/update_local_pisol_db.sh"
+  local UPDATE_SCRIPT="/home/oyins/Apex/pisol/cba/scripts/db_update.sh"
 
   declare -A commands=(
     ["▶️ Start MariaDB"]="sudo systemctl start mariadb"
@@ -17,7 +17,7 @@ mdb() {
     ["📂 List Tables in Database"]="list_tables"
     ["💾 Backup Database"]="backup_database"
     ["♻️ Restore Database"]="restore_database"
-    ["🔄 Update Local Pisol DB"]="run_update_script"
+    ["🔄 Update Pisol Local DB"]="run_update_script"
     ["🚪 Quit"]=":"
   )
 
@@ -32,8 +32,11 @@ mdb() {
       chmod +x "$UPDATE_SCRIPT"
     fi
 
-    echo "🚀 Running local Pisol DB update..."
+    echo "🚀 Running Pisol local DB update..."
     "$UPDATE_SCRIPT"
+    # Set a flag to break the main loop after update
+    UPDATE_DONE=1
+    return 0
   }
 
   create_database() {
@@ -77,6 +80,7 @@ mdb() {
     mysql -u root -p "$dbname" < "$filepath"
   }
 
+  UPDATE_DONE=0
   while true; do
     local choice=$(printf "%s\n" "${(@k)commands}" | fzf \
       --height 20 \
@@ -85,5 +89,8 @@ mdb() {
 
     [[ -z "$choice" || "$choice" == "🚪 Quit" ]] && break
     eval "${commands[$choice]}"
+    if [[ $UPDATE_DONE -eq 1 ]]; then
+      break
+    fi
   done
 }
