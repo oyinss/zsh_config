@@ -20,7 +20,7 @@ myenv() {
     fi
 }
 
-pym() {
+py.() {
   # Define an associative array with Python-related commands as keys and corresponding commands as values
   declare -A commands=(
     ["Run Python App"]="python app.py"
