@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-gitm() {
+git.() {
   # Define an associative array with emoji-labeled Git commands
   declare -A commands=(
     ["🆕 Initialize New Git Repository"]="git init"
