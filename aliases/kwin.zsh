@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-meta() {
+kwin.() {
   typeset -A actions=(
     ["🎯 Set Meta to KRunner"]="kwriteconfig5 --file ~/.config/kwinrc --group ModifierOnlyShortcuts --key Meta \"org.kde.krunner,/App,,toggleDisplay\" && qdbus org.kde.KWin /KWin reconfigure"
     ["📦 Set Meta to Application Launcher"]="kwriteconfig5 --file ~/.config/kwinrc --group ModifierOnlyShortcuts --key Meta \"org.kde.plasmashell,/PlasmaShell,org.kde.PlasmaShell,activateLauncherMenu\" && qdbus org.kde.KWin /KWin reconfigure"
