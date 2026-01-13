@@ -1,6 +1,6 @@
 # ~/.zsh/aliases/asdfpy.zsh
 
-asdfpy() {
+asdf.() {
   typeset -A actions=(
     ["🐍 Set Global Python Version"]="asdfpy_set_global"
     ["➕ Install New Python Version"]="asdfpy_install"
