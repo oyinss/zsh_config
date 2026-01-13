@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-fpak() {
+flatpak.() {
   # Define the fpurge function for uninstalling apps
   fpurge() {
     # List installed Flatpak apps and select one using fzf
