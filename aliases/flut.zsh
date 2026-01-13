@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-flut() {
+flutter.() {
   typeset -A commands=(
     ["🩺 Doctor"]="flutter doctor"
     ["⬆️ Upgrade Project"]="flutter upgrade"
