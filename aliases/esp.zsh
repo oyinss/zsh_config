@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-esp() {
+espanso.() {
   typeset -A commands=(
     ["📶 Check Espanso Status"]="espanso status"
     ["🚀 Start Espanso"]="espanso start"
