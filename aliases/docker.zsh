@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-dok() {
+docker.() {
   typeset -A commands=(
     ["🔍 Running Containers"]="docker PS"
     ["📋 All Containers"]="docker ps -a"
