@@ -18,5 +18,5 @@ vo() {
   fi
 
   # Open file in existing VS Code window
-  code -r "$selection"
+  code-insiders -r "$selection"
 }
