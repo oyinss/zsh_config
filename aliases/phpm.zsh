@@ -11,7 +11,7 @@
 #   PHP_HOST  → default: localhost
 # ===========================
 
-phpm() {
+php.() {
   local PHP_BIN="${PHP_BIN:-php}"
   local PHP_PORT="${PHP_PORT:-8000}"
   local PHP_HOST="${PHP_HOST:-localhost}"
