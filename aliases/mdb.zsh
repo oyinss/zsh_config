@@ -1,7 +1,9 @@
 #!/bin/zsh
 
+alias msql="mariadb"
+
 mdb() {
-  local UPDATE_SCRIPT="/home/oyins/Apex/pisol/cba/scripts/db_update.sh"
+  local UPDATE_SCRIPT="$HOME/Apex/pisol/cba/scripts/db_update.sh"
 
   declare -A commands=(
     ["▶️ Start MariaDB"]="sudo systemctl start mariadb"
@@ -14,9 +16,11 @@ mdb() {
     ["🗑 Drop Database"]="drop_database"
     ["👤 Create New User"]="create_user"
     ["🔑 Change User Password"]="change_user_password"
+    ["🔐 Setup DB Credentials"]="setup_db_creds"
     ["📂 List Tables in Database"]="list_tables"
     ["💾 Backup Database"]="backup_database"
     ["♻️ Restore Database"]="restore_database"
+    ["📤 Export to CSV"]="export_to_csv"
     ["🔄 Update Pisol Local DB"]="run_update_script"
     ["🚪 Quit"]=":"
   )
@@ -33,7 +37,17 @@ mdb() {
     fi
 
     echo "🚀 Running Pisol local DB update..."
-    "$UPDATE_SCRIPT"
+    # If user has ~/.my.cnf with a password, export it temporarily so the update script can run passwordless
+    if [[ -r "$HOME/.my.cnf" ]]; then
+      cfg_pass=$(grep -iE '^[[:space:]]*password[[:space:]]*=' "$HOME/.my.cnf" | head -n1 | sed 's/.*=//;s/[[:space:]]*//g')
+      if [[ -n "$cfg_pass" ]]; then
+        MYSQL_PWD="$cfg_pass" "$UPDATE_SCRIPT"
+      else
+        "$UPDATE_SCRIPT"
+      fi
+    else
+      "$UPDATE_SCRIPT"
+    fi
     # Set a flag to break the main loop after update
     UPDATE_DONE=1
     return 0
@@ -54,6 +68,21 @@ mdb() {
     read -s "password?Password: "
     echo
     mysql -u root -p -e "CREATE USER '$username'@'localhost' IDENTIFIED BY '$password';"
+  }
+
+  setup_db_creds() {
+    read "dbuser?DB user (default: $USER): "
+    dbuser=${dbuser:-$USER}
+    read -s "dbpass?Password for $dbuser: "
+    echo
+    cat > "$HOME/.my.cnf" <<EOF
+[client]
+user=$dbuser
+password=$dbpass
+host=localhost
+EOF
+    chmod 600 "$HOME/.my.cnf"
+    echo "✅ Saved credentials to $HOME/.my.cnf (permissions 600)"
   }
 
   change_user_password() {
@@ -78,6 +107,78 @@ mdb() {
     read "filepath?Backup file path: "
     read "dbname?Restore into database: "
     mysql -u root -p "$dbname" < "$filepath"
+  }
+
+  export_to_csv() {
+    read "query?Paste your SELECT query: "
+    read "dbname?Database (leave blank if your query uses database.table): "
+    # Trim whitespace from dbname
+    dbname=$(echo "$dbname" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    # If the query already references database.table, ignore dbname
+    if echo "$query" | grep -iqE '[[:alnum:]_]+\.[[:alnum:]_]+'; then
+      dbname=""
+    fi
+    # Extract table name for filename (fallback to 'export')
+    local tbl=$(echo "$query" | grep -o -E 'from[[:space:]]+([a-zA-Z0-9_]+)' | awk '{print $2}' | head -n1)
+    [[ -z "$tbl" ]] && tbl="export"
+    local ts=$(date +%Y%m%d_%H%M%S)
+    local outdir="$(pwd)/csv"
+    mkdir -p "$outdir"
+    # Suggest a filename based on db, table and simple WHERE key=value
+    local suggested
+    # try to extract first where key=value (single-quoted)
+    local where_kv=$(echo "$query" | grep -io -E "where[[:space:]]+[[:alnum:]_]+[[:space:]]*=[[:space:]]*'[^']+'" | head -n1)
+    if [[ -n "$where_kv" ]]; then
+      local col=$(echo "$where_kv" | sed -E "s/where[[:space:]]+([[:alnum:]_]+)[[:space:]]*=.*/\1/I")
+      local val=$(echo "$where_kv" | sed -E "s/.*=[[:space:]]*'([^']+)'.*/\1/")
+      suggested="${tbl}_${col}_${val}"
+    else
+      suggested="$tbl"
+    fi
+    # do not prefix with database name to keep filenames short
+    suggested="${suggested}_${ts}.csv"
+    # allow user to override filename
+    read "fname?Filename (default: $suggested): "
+    fname=${fname:-$suggested}
+    # sanitize filename (replace spaces)
+    fname=$(echo "$fname" | tr ' ' '_' | tr -d '"')
+    local outfile="$outdir/$fname"
+    # Remove trailing semicolon if present
+    query=$(echo "$query" | sed 's/;[[:space:]]*$//')
+    echo "Running export..."
+    read "dbuser?DB user (default: $USER): "
+    dbuser=${dbuser:-$USER}
+    # If ~/.my.cnf exists and contains credentials for this user, skip -p so client uses the file
+    use_pw_flag="-p"
+    if [[ -r "$HOME/.my.cnf" ]]; then
+      if grep -iqE '^[[:space:]]*user[[:space:]]*=' "$HOME/.my.cnf" && grep -iqE '^[[:space:]]*password[[:space:]]*=' "$HOME/.my.cnf"; then
+        cfg_user=$(grep -iE '^[[:space:]]*user[[:space:]]*=' "$HOME/.my.cnf" | head -n1 | sed 's/.*=//;s/[[:space:]]*//g')
+        if [[ "$cfg_user" == "$dbuser" ]]; then
+          use_pw_flag=""
+        fi
+      fi
+    fi
+    if [[ -n "$dbname" ]]; then
+      if [[ -n "$use_pw_flag" ]]; then
+        mariadb -u "$dbuser" $use_pw_flag -D"$dbname" -B -e "$query" | sed $'s/\t/;/g' > "$outfile"
+      else
+        mariadb -u "$dbuser" -D"$dbname" -B -e "$query" | sed $'s/\t/;/g' > "$outfile"
+      fi
+    else
+      if [[ -n "$use_pw_flag" ]]; then
+        mariadb -u "$dbuser" $use_pw_flag -B -e "$query" | sed $'s/\t/;/g' > "$outfile"
+      else
+        mariadb -u "$dbuser" -B -e "$query" | sed $'s/\t/;/g' > "$outfile"
+      fi
+    fi
+    if [[ $? -eq 0 && -s "$outfile" ]]; then
+      echo "✅ Exported to $outfile"
+      # Signal main loop to exit and return from function
+      UPDATE_DONE=1
+      return 0
+    else
+      echo "❌ Export failed. Check permissions, credentials and query syntax."
+    fi
   }
 
   UPDATE_DONE=0
