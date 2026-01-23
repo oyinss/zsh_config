@@ -37,9 +37,12 @@ php.() {
     read "port?Enter port [$PHP_PORT]: "
     port=${port:-$PHP_PORT}
     echo "🚀 Starting PHP server at http://$PHP_HOST:$port (background)"
-    $PHP_BIN -S "$PHP_HOST:$port" > /dev/null 2> /dev/null &
+    local LOG="${PHP_ERROR_LOG:-$PWD/php_errors.log}"
+    mkdir -p "$(dirname "$LOG")" >/dev/null 2>&1
+    touch "$LOG" >/dev/null 2>&1
+    $PHP_BIN -d error_log="$LOG" -S "$PHP_HOST:$port" > /dev/null 2> /dev/null &
     PHP_SERVER_PID=$!
-    echo "PHP server started in background with PID $PHP_SERVER_PID. PHP script errors will be logged to the file set in php.ini (error_log)."
+    echo "PHP server started in background with PID $PHP_SERVER_PID. PHP script errors will be logged to $LOG."
     return
   }
 
@@ -52,9 +55,12 @@ php.() {
     read "port?Enter port [$PHP_PORT]: "
     port=${port:-$PHP_PORT}
     echo "📁 Serving $(pwd) at http://$PHP_HOST:$port (background)"
-    $PHP_BIN -S "$PHP_HOST:$port" -t . > /dev/null 2> /dev/null &
+    local LOG="${PHP_ERROR_LOG:-$PWD/php_errors.log}"
+    mkdir -p "$(dirname "$LOG")" >/dev/null 2>&1
+    touch "$LOG" >/dev/null 2>&1
+    $PHP_BIN -d error_log="$LOG" -S "$PHP_HOST:$port" -t . > /dev/null 2> /dev/null &
     PHP_SERVER_PID=$!
-    echo "PHP server started in background with PID $PHP_SERVER_PID. PHP script errors will be logged to the file set in php.ini (error_log)."
+    echo "PHP server started in background with PID $PHP_SERVER_PID. PHP script errors will be logged to $LOG."
     return
   }
 
