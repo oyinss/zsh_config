@@ -47,8 +47,13 @@ php.() {
   }
 
   stop_php_server() {
-    pkill -f "php -S"
-    echo "⛔ PHP server stopped."
+    local count=$(pgrep -f "php.*-S" | wc -l)
+    if [[ $count -eq 0 ]]; then
+      echo "⚠️  No PHP server found running."
+      return 1
+    fi
+    pkill -9 -f "php.*-S"
+    echo "⛔ PHP server stopped ($count process(es) killed)."
   }
 
   serve_here() {
@@ -82,3 +87,11 @@ php.() {
   [[ -z "$choice" || "$choice" == "🚪 Quit" ]] && return
   eval "${commands[$choice]}"
 }
+
+# ===========================
+# Convenient Aliases
+# ===========================
+alias stop='pkill -9 -f "php.*-S" && echo "⛔ PHP server stopped." || echo "⚠️  No PHP server running."'
+alias phpstop='pkill -9 -f "php.*-S" && echo "⛔ PHP server stopped." || echo "⚠️  No PHP server running."'
+alias phpstart='php -S localhost:8000'
+alias phpserve='php -S localhost:8000 -t .'
