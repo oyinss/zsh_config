@@ -112,21 +112,16 @@ EOF
   export_to_csv() {
     read "query?Paste your SELECT query: "
     read "dbname?Database (leave blank if your query uses database.table): "
-    # Trim whitespace from dbname
     dbname=$(echo "$dbname" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-    # If the query already references database.table, ignore dbname
     if echo "$query" | grep -iqE '[[:alnum:]_]+\.[[:alnum:]_]+'; then
       dbname=""
     fi
-    # Extract table name for filename (fallback to 'export')
     local tbl=$(echo "$query" | grep -o -E 'from[[:space:]]+([a-zA-Z0-9_]+)' | awk '{print $2}' | head -n1)
     [[ -z "$tbl" ]] && tbl="export"
     local ts=$(date +%Y%m%d_%H%M%S)
     local outdir="$(pwd)/csv"
     mkdir -p "$outdir"
-    # Suggest a filename based on db, table and simple WHERE key=value
     local suggested
-    # try to extract first where key=value (single-quoted)
     local where_kv=$(echo "$query" | grep -io -E "where[[:space:]]+[[:alnum:]_]+[[:space:]]*=[[:space:]]*'[^']+'" | head -n1)
     if [[ -n "$where_kv" ]]; then
       local col=$(echo "$where_kv" | sed -E "s/where[[:space:]]+([[:alnum:]_]+)[[:space:]]*=.*/\1/I")
@@ -135,27 +130,20 @@ EOF
     else
       suggested="$tbl"
     fi
-    # do not prefix with database name to keep filenames short
     suggested="${suggested}_${ts}.csv"
-    # allow user to override filename
     read "fname?Filename (default: $suggested): "
     fname=${fname:-$suggested}
-    # sanitize filename (replace spaces)
     fname=$(echo "$fname" | tr ' ' '_' | tr -d '"')
     local outfile="$outdir/$fname"
-    # Remove trailing semicolon if present
     query=$(echo "$query" | sed 's/;[[:space:]]*$//')
     echo "Running export..."
     read "dbuser?DB user (default: $USER): "
     dbuser=${dbuser:-$USER}
-    # If ~/.my.cnf exists and contains credentials for this user, skip -p so client uses the file
+    # Always use passwordless if ~/.my.cnf exists and has user/password, regardless of dbuser prompt
     use_pw_flag="-p"
     if [[ -r "$HOME/.my.cnf" ]]; then
       if grep -iqE '^[[:space:]]*user[[:space:]]*=' "$HOME/.my.cnf" && grep -iqE '^[[:space:]]*password[[:space:]]*=' "$HOME/.my.cnf"; then
-        cfg_user=$(grep -iE '^[[:space:]]*user[[:space:]]*=' "$HOME/.my.cnf" | head -n1 | sed 's/.*=//;s/[[:space:]]*//g')
-        if [[ "$cfg_user" == "$dbuser" ]]; then
-          use_pw_flag=""
-        fi
+        use_pw_flag=""
       fi
     fi
     if [[ -n "$dbname" ]]; then
@@ -173,7 +161,6 @@ EOF
     fi
     if [[ $? -eq 0 && -s "$outfile" ]]; then
       echo "✅ Exported to $outfile"
-      # Signal main loop to exit and return from function
       UPDATE_DONE=1
       return 0
     else
