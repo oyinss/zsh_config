@@ -21,7 +21,7 @@ mdb() {
     ["💾 Backup Database"]="backup_database"
     ["♻️ Restore Database"]="restore_database"
     ["📤 Export to CSV"]="export_to_csv"
-    ["🔄 Update Pisol Local DB"]="run_update_script"
+    ["🔄 Update CBA Local DB"]="run_update_script"
     ["🚪 Quit"]=":"
   )
 
@@ -36,7 +36,7 @@ mdb() {
       chmod +x "$UPDATE_SCRIPT"
     fi
 
-    echo "🚀 Running Pisol local DB update..."
+    echo "🚀 Running CBA local DB update..."
     # If user has ~/.my.cnf with a password, export it temporarily so the update script can run passwordless
     if [[ -r "$HOME/.my.cnf" ]]; then
       cfg_pass=$(grep -iE '^[[:space:]]*password[[:space:]]*=' "$HOME/.my.cnf" | head -n1 | sed 's/.*=//;s/[[:space:]]*//g')
