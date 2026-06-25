@@ -10,7 +10,7 @@
 # Constants
 # -------------------------------------------------------
 ZSH_CONFIG_DIR="$HOME/zsh"
-ENV_FILE="$HOME/.env"
+ENV_FILE="$HOME/.shell.env"
 P10K_CONFIG="$HOME/.p10k.zsh"
 DIRHISTORY_PLUGIN="$ZSH_CONFIG_DIR/custom_plugins/dirhistory.plugin.zsh"
 FIGFONTDIR="$HOME/zsh/figlet-fonts"
@@ -117,3 +117,6 @@ export PATH="$HOME/flutter/bin:$PATH"
 export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 export PATH="$JAVA_HOME/bin:$PATH"
 export CHROME_EXECUTABLE=/usr/bin/google-chrome-stable
+
+# Vite+ bin (https://viteplus.dev)
+. "$HOME/.vite-plus/env"
