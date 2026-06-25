@@ -9,16 +9,16 @@
 #------------------------------------------------------
 # Name on folder in .config directory
 #------------------------------------------------------
-alias lazy="NVIM_APPNAME=LazyVim nvim"
-alias kick="NVIM_APPNAME=KickStart nvim"
-alias chad="NVIM_APPNAME=NvChad nvim"
-alias astro="NVIM_APPNAME=AstroNvim nvim"
+alias lazy="NVIM_APPNAME=nvimLazyVim nvim"
+alias kick="NVIM_APPNAME=nvimKickStart nvim"
+alias chad="NVIM_APPNAME=nvimChad nvim"
+alias astro="NVIM_APPNAME=nvimAstro nvim"
 
 #------------------------------------------------------
 # ns function to switch between neovim configuration
 #------------------------------------------------------
 function ns() {
-  items=("default" "KickStart" "LazyVim" "NvChad" "AstroNvim")
+  items=("default" "nvimKickStart" "nvimLazyVim" "nvimChad" "nvimAstro")
   config=$(printf "%s\n" "${items[@]}" | fzf --prompt=" Neovim Config  " --height=~50% --layout=reverse --border --exit-0)
   if [[ -z $config ]]; then
     echo "Nothing selected"
