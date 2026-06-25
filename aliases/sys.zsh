@@ -7,6 +7,8 @@
 # ███  █  ███   █ █ ███ ███ █ █ ███ ███ ███
 
 # Figlet Fonts
+alias codei="code-insiders"
+alias killibus="ibus exit && pkill -f ibus-typing-booster"
 alias figfonts="showfigfonts"
 alias s="subl"
 alias cl="clear"
@@ -59,7 +61,7 @@ alias npm.chown="sudo chown -R $USER $(npm root -g)"
 
 # Local user Backup
 alias backup="sudo $HOME/dotfiles/backup.sh"
-alias ez="exec zsh"
+alias reload="exec zsh"
 alias zz='zi'
 
 # Colorize grep output (good for log files)
