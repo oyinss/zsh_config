@@ -81,3 +81,5 @@ export GOPATH=$HOME/go
 # -------------------------------------------------------
 export PATH=$GOPATH/bin:$GOROOT/bin:$HOME/.local/bin:$PATH
 
+export PATH="$HOME/.npm-global/bin:$PATH"
+

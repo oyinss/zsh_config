@@ -120,3 +120,7 @@ export CHROME_EXECUTABLE=/usr/bin/google-chrome-stable
 
 # Vite+ bin (https://viteplus.dev)
 . "$HOME/.vite-plus/env"
+
+# Added by codebase-memory-mcp install
+export PATH="/home/oyins/.local/bin:$PATH"
+export PATH="$HOME/.opencode/bin:$PATH"

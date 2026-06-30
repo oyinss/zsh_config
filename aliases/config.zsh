@@ -9,7 +9,7 @@ conf() {
     ["🧩 Edit GRUB Config"]="sudo nvim /etc/default/grub"
     ["🔧 Edit mkinitcpio Config"]="sudo nvim /etc/mkinitcpio.conf"
     ["📦 Edit Pacman Config"]="sudo nvim /etc/pacman.conf"
-    ["💻 Edit Zsh Config"]="nvim ~/.config/zsh/conf/.zshrc"
+    ["💻 Edit Zsh Config"]="nvim ~/.zshrc"
     ["🎬 Edit Xinit Config"]="nvim ~/.xinitrc"
     ["📜 Edit Bash Config"]="nvim ~/.bashrc"
     ["🌍 Edit Environment Variables"]="sudo nvim /etc/environment"

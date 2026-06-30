@@ -16,6 +16,9 @@ ip-show() {
   ip route get 1.1.1.1 | awk '{print $7}'
 }
 
+# Cleanup tmp dir
+alias tmpclean='find /tmp -maxdepth 1 -user "$USER" -name '\''*.so'\'' -type f -mtime +1 -delete && df -h /tmp'
+
 alias switch="sudo -i -u"
 # Swappiness
 alias swappiness="bat /proc/sys/vm/swappiness"
