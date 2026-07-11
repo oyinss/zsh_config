@@ -1,0 +1,14 @@
+# Secrets / local environment
+.shell.env
+.env
+*.env
+.my.cnf
+.*_emails
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor temp files
+*.swp
+*.swo
