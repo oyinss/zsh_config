@@ -122,5 +122,219 @@ export CHROME_EXECUTABLE=/usr/bin/google-chrome-stable
 . "$HOME/.vite-plus/env"
 
 # Added by codebase-memory-mcp install
-export PATH="/home/oyins/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.opencode/bin:$PATH"
+
+# kilo
+export PATH="$HOME/.kilo/bin:$PATH"
+
+# =======================================================
+# ADDITIONS from reference config (setopts, vars, history,
+# completion styling, path helpers, utility functions,
+# aliases)
+# =======================================================
+
+# -------------------------------------------------------
+# Additional setopts (not covered by supercharge)
+# -------------------------------------------------------
+setopt correct             # auto correct mistakes
+setopt magicequalsubst     # enable filename expansion for arguments of the form 'anything=expression'
+setopt notify              # report the status of background jobs immediately
+setopt numericglobsort     # sort filenames numerically when it makes sense
+setopt promptsubst         # enable command substitution in prompt
+
+# -------------------------------------------------------
+# Additional Environment Variables
+# -------------------------------------------------------
+export VISUAL=nvim
+export SUDO_EDITOR=nvim
+export FCEDIT=nvim
+
+if [[ -x "$(command -v bat)" ]]; then
+  export PAGER=bat
+fi
+
+if [[ -x "$(command -v fzf)" ]] && [[ -z "${FZF_DEFAULT_OPTS##*--color*}" ]]; then
+  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS \
+    --info=inline-right \
+    --ansi \
+    --layout=reverse \
+    --border=rounded \
+    --color=border:#27a1b9 \
+    --color=fg:#c0caf5 \
+    --color=gutter:#16161e \
+    --color=header:#ff9e64 \
+    --color=hl+:#2ac3de \
+    --color=hl:#2ac3de \
+    --color=info:#545c7e \
+    --color=marker:#ff007c \
+    --color=pointer:#ff007c \
+    --color=prompt:#2ac3de \
+    --color=query:#c0caf5:regular \
+    --color=scrollbar:#27a1b9 \
+    --color=separator:#ff9e64 \
+    --color=spinner:#ff007c \
+  "
+fi
+
+# -------------------------------------------------------
+# History extras
+# -------------------------------------------------------
+setopt sharehistory        # share history across sessions
+setopt histignoredups      # alternative spelling, ensure dedup
+HISTDUP=erase              # erase duplicates in history
+
+# -------------------------------------------------------
+# Completion styling
+# -------------------------------------------------------
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*:*:docker:*' option-stacking yes
+zstyle ':completion:*:*:docker-*:*' option-stacking yes
+
+# -------------------------------------------------------
+# Path management functions
+# -------------------------------------------------------
+function pathappend() {
+    for ARG in "$@"; do
+        if [ -d "$ARG" ] && [[ ":$PATH:" != *":$ARG:"* ]]; then
+            PATH="${PATH:+"$PATH:"}$ARG"
+        fi
+    done
+}
+
+function pathprepend() {
+    for ARG in "$@"; do
+        if [ -d "$ARG" ] && [[ ":$PATH:" != *":$ARG:"* ]]; then
+            PATH="$ARG${PATH:+":$PATH"}"
+        fi
+    done
+}
+
+# -------------------------------------------------------
+# Yazi: cd on exit wrapper
+# -------------------------------------------------------
+function y() {
+    local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+    yazi "$@" --cwd-file="$tmp"
+    if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+        builtin cd -- "$cwd"
+    fi
+    rm -f -- "$tmp"
+}
+
+# -------------------------------------------------------
+# Utility functions
+# -------------------------------------------------------
+
+# Start a program detached from terminal
+function runfree() {
+    "$@" > /dev/null 2>&1 & disown
+}
+
+# Copy file with a progress bar (rsync preferred, strace fallback)
+function cpp() {
+    if [[ -x "$(command -v rsync)" ]]; then
+        rsync -ah --info=progress2 "${1}" "${2}"
+    else
+        set -e
+        strace -q -ewrite cp -- "${1}" "${2}" 2>&1 \
+        | awk '{
+        count += $NF
+        if (count % 10 == 0) {
+            percent = count / total_size * 100
+            printf "%3d%% [", percent
+            for (i=0;i<=percent;i++)
+                printf "="
+                printf ">"
+                for (i=percent;i<100;i++)
+                    printf " "
+                    printf "]\r"
+                }
+            }
+        END { print "" }' total_size=$(stat -c '%s' "${1}") count=0
+    fi
+}
+
+# Copy and go to directory
+function cpg() {
+    if [[ -d "$2" ]]; then
+        cp "$1" "$2" && cd "$2"
+    else
+        cp "$1" "$2"
+    fi
+}
+
+# Move and go to directory
+function mvg() {
+    if [[ -d "$2" ]]; then
+        mv "$1" "$2" && cd "$2"
+    else
+        mv "$1" "$2"
+    fi
+}
+
+# Create directory and go into it
+function mkdirg() {
+    mkdir -p "$@" && cd "$@"
+}
+
+# Print random Unicode bar chart across terminal width
+function random_bars() {
+    columns=$(tput cols)
+    chars=(▁ ▂ ▃ ▄ ▅ ▆ ▇ █)
+    for ((i = 1; i <= $columns; i++)); do
+        echo -n "${chars[RANDOM%${#chars} + 1]}"
+    done
+    echo
+}
+
+# -------------------------------------------------------
+# Additional Aliases
+# -------------------------------------------------------
+alias c='clear'
+alias ..='cd ..'
+alias rmdir='rmdir -v'
+
+# bat as cat
+if [[ -x "$(command -v bat)" ]]; then
+    alias cat='bat'
+fi
+
+# lazygit
+if [[ -x "$(command -v lazygit)" ]]; then
+    alias lg='lazygit'
+fi
+
+# Open files with default X application
+if [[ -x "$(command -v xdg-open)" ]]; then
+    alias open='runfree xdg-open'
+fi
+
+# PDF reader
+if [[ -x "$(command -v evince)" ]]; then
+    alias pdf='runfree evince'
+fi
+
+# FZF with preview
+if [[ -x "$(command -v fzf)" ]]; then
+    alias fzf='fzf --preview "bat --style=numbers --color=always --line-range :500 {}"'
+    if [[ -x "$(command -v xdg-open)" ]]; then
+        alias preview='open $(fzf --info=inline --query="${@}")'
+    else
+        alias preview='edit $(fzf --info=inline --query="${@}")'
+    fi
+fi
+
+# Local IP
+if [[ -x "$(command -v ip)" ]]; then
+    alias iplocal="ip -br -c a"
+else
+    alias iplocal="ifconfig | grep -Eo 'inet (addr:)?([0-9]*\\.){3}[0-9]*' | grep -Eo '([0-9]*\\.){3}[0-9]*' | grep -v '127.0.0.1'"
+fi
+
+# Public IP
+if [[ -x "$(command -v curl)" ]]; then
+    alias ipexternal="curl -s ifconfig.me && echo"
+elif [[ -x "$(command -v wget)" ]]; then
+    alias ipexternal="wget -qO- ifconfig.me && echo"
+fi
