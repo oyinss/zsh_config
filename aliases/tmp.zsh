@@ -119,7 +119,7 @@ tmp() {
   while [[ $quit -eq 0 ]]; do
     local choice
     local plain_choice
-    choice=$(printf "%s\n" "${menu[@]}" | fzf \
+    choice=$(printf "%s\n" "${menu[@]}" | fzf --no-preview \
       --ansi \
       --height 12 \
       --prompt "/tmp › " \
