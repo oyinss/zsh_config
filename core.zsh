@@ -9,11 +9,11 @@
 # -------------------------------------------------------
 # Constants
 # -------------------------------------------------------
-ZSH_CONFIG_DIR="$HOME/zsh"
+ZSH_CONFIG_DIR="$HOME/.config/zsh"
 ENV_FILE="$HOME/.shell.env"
 P10K_CONFIG="$HOME/.p10k.zsh"
 DIRHISTORY_PLUGIN="$ZSH_CONFIG_DIR/custom_plugins/dirhistory.plugin.zsh"
-FIGFONTDIR="$HOME/zsh/figlet-fonts"
+FIGFONTDIR="$HOME/.config/zsh/figlet-fonts"
 
 # -------------------------------------------------------
 # Display username banner
@@ -287,54 +287,3 @@ function random_bars() {
     done
     echo
 }
-
-# -------------------------------------------------------
-# Additional Aliases
-# -------------------------------------------------------
-alias c='clear'
-alias ..='cd ..'
-alias rmdir='rmdir -v'
-
-# bat as cat
-if [[ -x "$(command -v bat)" ]]; then
-    alias cat='bat'
-fi
-
-# lazygit
-if [[ -x "$(command -v lazygit)" ]]; then
-    alias lg='lazygit'
-fi
-
-# Open files with default X application
-if [[ -x "$(command -v xdg-open)" ]]; then
-    alias open='runfree xdg-open'
-fi
-
-# PDF reader
-if [[ -x "$(command -v evince)" ]]; then
-    alias pdf='runfree evince'
-fi
-
-# FZF with preview
-if [[ -x "$(command -v fzf)" ]]; then
-    alias fzf='fzf --preview "bat --style=numbers --color=always --line-range :500 {}"'
-    if [[ -x "$(command -v xdg-open)" ]]; then
-        alias preview='open $(fzf --info=inline --query="${@}")'
-    else
-        alias preview='edit $(fzf --info=inline --query="${@}")'
-    fi
-fi
-
-# Local IP
-if [[ -x "$(command -v ip)" ]]; then
-    alias iplocal="ip -br -c a"
-else
-    alias iplocal="ifconfig | grep -Eo 'inet (addr:)?([0-9]*\\.){3}[0-9]*' | grep -Eo '([0-9]*\\.){3}[0-9]*' | grep -v '127.0.0.1'"
-fi
-
-# Public IP
-if [[ -x "$(command -v curl)" ]]; then
-    alias ipexternal="curl -s ifconfig.me && echo"
-elif [[ -x "$(command -v wget)" ]]; then
-    alias ipexternal="wget -qO- ifconfig.me && echo"
-fi
